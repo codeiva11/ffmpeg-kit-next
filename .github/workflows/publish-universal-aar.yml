@@ -28,10 +28,20 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: download per-arch artifacts
-        uses: actions/download-artifact@v4
-        with:
-          run-id: ${{ inputs.run-id }}
-          path: artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # actions/download-artifact finds 0 artifacts for a foreign run-id
+          # in this repo, so download the artifact zips with gh api instead.
+          # Artifact ids are from the android build run (see workflow inputs).
+          mkdir -p artifacts
+          for spec in "14695957483 arm64-v8a" "14695618909 x86-64" "14695014703 arm-v7a" "14694969781 x86"; do
+            set -- $spec
+            echo "downloading artifact $1 ($2)..."
+            gh api "repos/codeiva11/ffmpeg-kit-next/actions/artifacts/$1/zip" > "artifacts/$2.zip"
+            unzip -q "artifacts/$2.zip" -d "artifacts/ffmpeg-kit-next-9.1.0-$2"
+          done
+          ls artifacts/
       - name: merge into universal AAR
         run: |
           python3 - <<'PYEOF'
