@@ -82,5 +82,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ inputs.release-tag }}" ffmpeg-kit-next-9.1.0-universal.aar ffmpeg-kit-next-9.1.0-universal.aar.sha256 --clobber
-          gh release view "${{ inputs.release-tag }}" --json assets --jq '.assets[] | .name + " " + (.size|tostring)'
+          gh release upload "${{ inputs.release-tag }}" ffmpeg-kit-next-9.1.0-universal.aar ffmpeg-kit-next-9.1.0-universal.aar.sha256 --clobber -R codeiva11/ffmpeg-kit-next
+          gh release view "${{ inputs.release-tag }}" --json assets --jq '.assets[] | .name + " " + (.size|tostring)' -R codeiva11/ffmpeg-kit-next
