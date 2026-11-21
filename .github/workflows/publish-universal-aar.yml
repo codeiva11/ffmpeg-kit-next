@@ -35,7 +35,7 @@ jobs:
           # in this repo, so download the artifact zips with gh api instead.
           # Artifact ids are from the android build run (see workflow inputs).
           mkdir -p artifacts
-          for spec in "14695957483 arm64-v8a" "14695618909 x86-64" "14695014703 arm-v7a" "14694969781 x86"; do
+          for spec in "14699584817 arm64-v8a" "14700467272 x86-64" "14699528298 arm-v7a" "14700481149 x86"; do
             set -- $spec
             echo "downloading artifact $1 ($2)..."
             gh api "repos/codeiva11/ffmpeg-kit-next/actions/artifacts/$1/zip" > "artifacts/$2.zip"
