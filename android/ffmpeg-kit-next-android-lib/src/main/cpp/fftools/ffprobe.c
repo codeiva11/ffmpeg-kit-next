@@ -37,6 +37,14 @@
  * --------------------------------------------------------
  * - FFmpeg 9.0.2 changes migrated
  *
+ * 11.2026
+ * --------------------------------------------------------
+ * - FFmpeg 9.1 migration: removed #include "libavutil/libm.h"
+ *   (FFmpeg removed libavutil/libm.h in 9.1; it only provided
+ *   fallback math macros for platforms lacking them, all of which
+ *   the Android NDK provides in <math.h>; upstream n9.1 drops
+ *   the include as well)
+ *
  * 08.2026
  * --------------------------------------------------------
  * - FFmpeg 9.0.1 changes migrated
@@ -127,7 +135,6 @@
 #include "libavutil/stereo3d.h"
 #include "libavutil/dict.h"
 #include "libavutil/intreadwrite.h"
-#include "libavutil/libm.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/timecode.h"
 #include "libavutil/timestamp.h"

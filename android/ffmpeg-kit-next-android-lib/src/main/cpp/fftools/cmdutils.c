@@ -42,6 +42,11 @@
  * - FFmpeg 9.1 migration: removed #include "compat/va_copy.h"
  *   (FFmpeg removed compat/va_copy.h in 9.1; cmdutils.c does not use
  *   va_copy, and upstream n9.1 cmdutils.c drops the include as well)
+ * - FFmpeg 9.1 migration: removed #include "libavutil/libm.h"
+ *   (FFmpeg removed libavutil/libm.h in 9.1; it only provided
+ *   fallback math macros for platforms lacking them, all of which
+ *   the Android NDK provides in <math.h>; upstream n9.1 drops
+ *   the include as well)
  *
  * 08.2026
  * --------------------------------------------------------
@@ -132,7 +137,6 @@
 #include "libavutil/bprint.h"
 #include "libavutil/display.h"
 #include "libavutil/getenv_utf8.h"
-#include "libavutil/libm.h"
 #include "libavutil/mem.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/eval.h"
