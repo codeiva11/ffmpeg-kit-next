@@ -14,8 +14,8 @@ android {
 
     defaultConfig {
         minSdk 24
-        versionCode 240902
-        versionName "9.0.2"
+        versionCode 240910
+        versionName "9.1.0"
         consumerProguardFiles "consumer-rules.pro"
     }
 
