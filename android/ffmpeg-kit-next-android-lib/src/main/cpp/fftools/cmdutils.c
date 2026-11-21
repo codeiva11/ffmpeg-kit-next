@@ -37,6 +37,12 @@
  * --------------------------------------------------------
  * - FFmpeg 9.0.2 changes migrated
  *
+ * 11.2026
+ * --------------------------------------------------------
+ * - FFmpeg 9.1 migration: removed #include "compat/va_copy.h"
+ *   (FFmpeg removed compat/va_copy.h in 9.1; cmdutils.c does not use
+ *   va_copy, and upstream n9.1 cmdutils.c drops the include as well)
+ *
  * 08.2026
  * --------------------------------------------------------
  * - FFmpeg 9.0.1 changes migrated
@@ -118,7 +124,6 @@
    references to libraries that are not being built. */
 
 #include "config.h"
-#include "compat/va_copy.h"
 #include "libavformat/avformat.h"
 #include "libswscale/swscale.h"
 #include "libswresample/swresample.h"
