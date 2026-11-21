@@ -1,0 +1,75 @@
+# Merge the four per-arch AARs from a completed android build run into one
+# universal AAR and upload it to the v9.1.0 release.
+#
+# The sandbox cannot upload release assets (its GitHub credential only covers
+# api.github.com, not uploads.github.com), so the publish step runs here,
+# where GITHUB_TOKEN can upload to the release.
+name: publish universal AAR
+
+on:
+  workflow_dispatch:
+    inputs:
+      run-id:
+        description: 'android build scripts run id whose artifacts to merge'
+        required: true
+        default: '44874523477'
+      release-tag:
+        description: 'release tag to upload the universal AAR to'
+        required: true
+        default: 'v9.1.0'
+
+permissions:
+  contents: write
+
+jobs:
+  merge-and-publish:
+    name: merge AARs and upload to release
+    runs-on: ubuntu-24.04
+    steps:
+      - name: download per-arch artifacts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ inputs.run-id }}
+          path: artifacts
+      - name: merge into universal AAR
+        run: |
+          python3 - <<'PYEOF'
+          import zipfile, hashlib, os
+          aars = {
+              "arm64-v8a": "artifacts/ffmpeg-kit-next-9.1.0-arm64-v8a/bundle-android-aar-24-maven/com/arthenica/ffmpeg-kit-next/9.1.0/ffmpeg-kit-next-9.1.0.aar",
+              "x86-64": "artifacts/ffmpeg-kit-next-9.1.0-x86-64/bundle-android-aar-24-maven/com/arthenica/ffmpeg-kit-next/9.1.0/ffmpeg-kit-next-9.1.0.aar",
+              "arm-v7a": "artifacts/ffmpeg-kit-next-9.1.0-arm-v7a/bundle-android-aar-24-maven/com/arthenica/ffmpeg-kit-next/9.1.0/ffmpeg-kit-next-9.1.0.aar",
+              "x86": "artifacts/ffmpeg-kit-next-9.1.0-x86/bundle-android-aar-24-maven/com/arthenica/ffmpeg-kit-next/9.1.0/ffmpeg-kit-next-9.1.0.aar",
+          }
+          abi_map = {"arm64-v8a": "arm64-v8a", "x86-64": "x86_64", "arm-v7a": "armeabi-v7a", "x86": "x86"}
+          out = "ffmpeg-kit-next-9.1.0-universal.aar"
+          zin = zipfile.ZipFile(aars["arm64-v8a"], "r")
+          zout = zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=6)
+          for item in zin.infolist():
+              zout.writestr(item, zin.read(item.filename))
+          for name, path in aars.items():
+              if name == "arm64-v8a":
+                  continue
+              z = zipfile.ZipFile(path, "r")
+              abi = abi_map[name]
+              for n in z.namelist():
+                  if n.startswith(f"jni/{abi}/"):
+                      zout.writestr(n, z.read(n))
+              z.close()
+          zin.close()
+          zout.close()
+          z = zipfile.ZipFile(out, "r")
+          assert z.testzip() is None
+          for abi in ["arm64-v8a", "armeabi-v7a", "x86", "x86_64"]:
+              sos = [n for n in z.namelist() if n.startswith(f"jni/{abi}/") and n.endswith(".so")]
+              assert len(sos) == 10, f"{abi}: {len(sos)} .so files, expected 10"
+          h = hashlib.sha256(open(out, "rb").read()).hexdigest()
+          open(out + ".sha256", "w").write(f"{h}  {out}\n")
+          print(f"universal AAR: {os.path.getsize(out)} bytes, SHA-256 {h}")
+          PYEOF
+      - name: upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ inputs.release-tag }}" ffmpeg-kit-next-9.1.0-universal.aar ffmpeg-kit-next-9.1.0-universal.aar.sha256 --clobber
+          gh release view "${{ inputs.release-tag }}" --json assets --jq '.assets[] | .name + " " + (.size|tostring)'
